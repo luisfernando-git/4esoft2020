@@ -1,6 +1,6 @@
 package observer.cofre;
 
-public interface CofreListenerSenha  extends CofreListener{
+public interface CofreListenerSenha extends CofreListener {
 
-	void senhaIncorreta();
+	void senhaIncorreta(int senhaInformada);
 }

@@ -7,44 +7,46 @@ public class Cofre {
 
 	private boolean aberto;
 	private int senha;
-	private List<CofreListenerAberto> listenersCofreAberto = new ArrayList<>();
-	private List<CofreListenerFechado> listenersCofreFechado = new ArrayList<>();
-	private List<CofreListenerSenha> listenersSenhaIncorreta = new ArrayList<>();
+	private List<CofreListener> listeners = new ArrayList<>();
 	
 	public Cofre(int senha) {
 		this.senha = senha;
 		this.aberto = true;
 	}
 	
-	public void abrir(int senha) {
+	public void abrir(int senha) throws SenhaIncorretaException {
 		
 		if(this.senha == senha) {
 			this.aberto = true;
-			this.listenersCofreAberto.forEach(l -> l.cofreFoiAberto());
-		} else {
+			this.listeners.stream()
+            	.filter(cofreListener -> cofreListener instanceof CofreListenerAberto)
+            	.map(cofreListener -> (CofreListenerAberto) cofreListener)
+            	.forEach(CofreListenerAberto::cofreFoiAberto);
 			
-			this.listenersSenhaIncorreta.forEach(l -> l.senhaIncorreta());
-		}
+			return;
+		}	
+		
+		this.listeners.stream()
+        	.filter(cofreListener -> cofreListener instanceof CofreListenerSenha)
+        	.map(cofreListener -> (CofreListenerSenha) cofreListener)
+        	.forEach(listener -> listener.senhaIncorreta(senha));
+		throw new SenhaIncorretaException("A senha " + senha + " é incorreta.");
+				
 	}
 	
 	public void fechar() {
-		this.listenersCofreFechado.forEach(l -> l.cofreFoiFechado());
 		this.aberto = false;
+		this.listeners.stream()
+        	.filter(cofreListener -> cofreListener instanceof CofreListenerFechado)
+        	.map(cofreListener -> (CofreListenerFechado) cofreListener)
+        	.forEach(CofreListenerFechado::cofreFoiFechado);
 	}
 	
 	public Boolean isAberto() {
 		return this.aberto;
 	}
 	
-	public void addListenerAberto(CofreListenerAberto listener) {
-		this.listenersCofreAberto.add(listener);
-	}
-	
-	public void addListenerFechado(CofreListenerFechado listener) {
-		this.listenersCofreFechado.add(listener);
-	}
-	
-	public void addListenerSenha(CofreListenerSenha listener) {
-		this.listenersSenhaIncorreta.add(listener);
-	}
+	public void addListener(CofreListener listener) {
+        this.listeners.add(listener);
+    }
 }
